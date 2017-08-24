@@ -30,7 +30,7 @@ func NewServer(handler http.Handler) (s *Server, err error) {
 		return s, err
 	}
 
-	httptestServer := httptest.NewServer(handleAndRecord(handler, outDoc))
+	httptestServer := httptest.NewServer(HandleAndRecord(handler, outDoc))
 
 	return &Server{
 		httptestServer,
@@ -57,7 +57,7 @@ func (s *Server) Finish() {
 	}
 }
 
-func handleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
+func HandleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// copy request body into Request object
 		docReq, err := doc.NewRequest(req)
