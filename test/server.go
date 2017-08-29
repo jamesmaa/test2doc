@@ -8,6 +8,7 @@ import (
 
 	"github.com/adams-sarah/test2doc/doc"
 	"github.com/adams-sarah/test2doc/doc/parse"
+	"github.com/gorilla/mux"
 )
 
 // resources = map[uri]Resource
@@ -86,8 +87,9 @@ func HandleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
 		// find action
 		action := resources[path].FindAction(req.Method)
 		if action == nil {
+			route := mux.CurrentRoute(req)
 			// make new action
-			action, err = doc.NewAction(req.Method, resp.HandlerInfo.FuncName)
+			action, err = doc.NewAction(req.Method, route.GetName())
 			if err != nil {
 				log.Println("Error:", err.Error())
 				return
