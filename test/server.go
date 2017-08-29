@@ -31,7 +31,7 @@ func NewServer(handler http.Handler) (s *Server, err error) {
 		return s, err
 	}
 
-	httptestServer := httptest.NewServer(HandleAndRecord(handler, outDoc))
+	httptestServer := httptest.NewServer(handleAndRecord(handler, outDoc))
 
 	return &Server{
 		httptestServer,
@@ -58,7 +58,7 @@ func (s *Server) Finish() {
 	}
 }
 
-func HandleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
+func handleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// copy request body into Request object
 		docReq, err := doc.NewRequest(req)
@@ -71,6 +71,11 @@ func HandleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
 		rw := httptest.NewRecorder()
 		resp := NewResponseWriter(rw)
 
+		handlerName := ""
+		route := mux.CurrentRoute(req)
+		if route != nil {
+			handlerName = route.GetName()
+		}
 		handler.ServeHTTP(resp, req)
 
 		// setup resource
@@ -87,9 +92,11 @@ func HandleAndRecord(handler http.Handler, outDoc *doc.Doc) http.HandlerFunc {
 		// find action
 		action := resources[path].FindAction(req.Method)
 		if action == nil {
-			route := mux.CurrentRoute(req)
+			if handlerName == "" {
+				handlerName = resp.HandlerInfo.FuncName
+			}
 			// make new action
-			action, err = doc.NewAction(req.Method, route.GetName())
+			action, err = doc.NewAction(req.Method, handlerName)
 			if err != nil {
 				log.Println("Error:", err.Error())
 				return
